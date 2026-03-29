@@ -1,0 +1,54 @@
+services:
+
+  mysql:
+    image: mysql:8
+    container_name: mysql-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: REPLACE YOUR PASSWORD
+      MYSQL_DATABASE: REPLACE YOUR DB NAME
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./Employee-Management-SpringBoot
+    container_name: springboot-app
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: REPLACE YOUR URL & DB NAME
+      SPRING_DATASOURCE_USERNAME: REPLACE YOUR USERNAME
+      SPRING_DATASOURCE_PASSWORD: REPLACE YOUR PASSWORD
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./Employee-Management-React
+    container_name: react-app
+    ports:
+      - "5050:5050"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+volumes:
+  mysql-data:
+
+networks:
+  app-network:
+    driver: bridge
